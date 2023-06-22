@@ -34,10 +34,19 @@ const handlePageLoaded = async () => {
     if (!response.ok) {
       throw Error('Não foi possível obter as informações')
     }
-    {
-    }
+
     const { results: pokeApiResults } = await response.json()
-    console.log(pokeApiResults)
+    const promisses = pokeApiResults.map((result) => fetch(result.url))
+    const responses = await Promise.allSettled(promisses)
+    const fulfilled = responses.filter(
+      (response) => response.status === 'fulfilled'
+    )
+    const pokePromises = fulfilled.map((url) => url.value.json())
+    const pokemons = await Promise.all(pokePromises)
+    const types = pokemons.map((fulfilled) =>
+      fulfilled.types.map((info) => info.type.name)
+    )
+    console.log(types)
   } catch (error) {
     console.log('algo deu errado', error)
   }
