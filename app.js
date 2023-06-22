@@ -37,6 +37,12 @@ const getPokemonsType = async (pokeApiResults) => {
   )
 }
 
+const getPokemonsIds = (pokeApiResults) =>
+  pokeApiResults.map(({ url }) => {
+    const urlAsArray = url.split('/')
+    return urlAsArray.at(urlAsArray.length - 2)
+  })
+
 const handlePageLoaded = async () => {
   try {
     const response = await fetch(
@@ -49,12 +55,8 @@ const handlePageLoaded = async () => {
 
     const { results: pokeApiResults } = await response.json()
     const types = await getPokemonsType(pokeApiResults)
-    const ids = pokeApiResults.map(({ url }) => {
-      const urlAsArray = url.split('/')
-      return urlAsArray.at(urlAsArray.length - 2)
-    })
+    const ids = getPokemonsIds(pokeApiResults)
     console.log(ids)
-    console.log(types)
   } catch (error) {
     console.log('algo deu errado', error)
   }
