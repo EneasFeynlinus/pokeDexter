@@ -24,6 +24,18 @@ const getTypeColor = (type) => {
 /*O que eu quero fazer quando essa pagina for carregada?
 Eu quero buscar os pogemos e renderizar os pokemons na tela
 */
+const getPokemonsType = async (pokeApiResults) => {
+  const promisses = pokeApiResults.map((result) => fetch(result.url))
+  const responses = await Promise.allSettled(promisses)
+  const fulfilled = responses.filter(
+    (response) => response.status === 'fulfilled'
+  )
+  const pokePromises = fulfilled.map((url) => url.value.json())
+  const pokemons = await Promise.all(pokePromises)
+  return pokemons.map((fulfilled) =>
+    fulfilled.types.map((info) => info.type.name)
+  )
+}
 
 const handlePageLoaded = async () => {
   try {
@@ -36,16 +48,12 @@ const handlePageLoaded = async () => {
     }
 
     const { results: pokeApiResults } = await response.json()
-    const promisses = pokeApiResults.map((result) => fetch(result.url))
-    const responses = await Promise.allSettled(promisses)
-    const fulfilled = responses.filter(
-      (response) => response.status === 'fulfilled'
-    )
-    const pokePromises = fulfilled.map((url) => url.value.json())
-    const pokemons = await Promise.all(pokePromises)
-    const types = pokemons.map((fulfilled) =>
-      fulfilled.types.map((info) => info.type.name)
-    )
+    const types = await getPokemonsType(pokeApiResults)
+    const ids = pokeApiResults.map(({ url }) => {
+      const urlAsArray = url.split('/')
+      return urlAsArray.at(urlAsArray.length - 2)
+    })
+    console.log(ids)
     console.log(types)
   } catch (error) {
     console.log('algo deu errado', error)
