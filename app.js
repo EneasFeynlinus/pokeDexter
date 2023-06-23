@@ -45,7 +45,7 @@ const getPokemonsType = async (pokeApiResults) => {
 const getPokemonsIds = (pokeApiResults) =>
   pokeApiResults.map(({ url }) => {
     const urlAsArray = DOMPurify.sanitize(url).split('/')
-    return urlAsArray.at(urlAsArray.length - 2)
+    return urlAsArray[urlAsArray.length - 2]
   })
 
 const getPokemonsImgs = async (ids) => {
@@ -148,7 +148,8 @@ const handleNextPokemonRender = () => {
       const pokemons = await getPokemons()
       renderPokemons(pokemons)
       observeLastPokemons(pokemonsObserver)
-    }
+    },
+    { rootMargin: '500px' }
   )
   observeLastPokemons(pokemonsObserver)
 }
