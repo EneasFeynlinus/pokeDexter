@@ -56,11 +56,9 @@ const getPokemonsImgs = async (ids) => {
   return fulfilled.map((response) => response.value.url)
 }
 
-const getPokemons = async () => {
+const getPokemons = async (url) => {
   try {
-    const response = await fetch(
-      'https://pokeapi.co/api/v2/pokemon?limit=15&offset=0'
-    )
+    const response = await fetch(url)
 
     if (!response.ok) {
       throw new Error('Não foi possível obter as informações')
@@ -119,23 +117,34 @@ const renderPokemons = (pokemons) => {
   ul.append(fragment)
 }
 
-const handleNextPokemonRender = () => {
-  const pokemonsObserver = new IntersectionObserver(([lastPokemon]) => {
-    if (!lastPokemon.isIntersecting) {
-      return
-    }
-
-    console.log('Executa uma ação quando o elemento esta visiviel.')
-  })
-
+const observeLastPokemons = (pokemonsObserver) => {
   const lastPokemon = document.querySelector(
     '[data-js="pokemons-list"]'
   ).lastChild
   pokemonsObserver.observe(lastPokemon)
 }
 
+const handleNextPokemonRender = () => {
+  const pokemonsObserver = new IntersectionObserver(
+    async ([lastPokemon], observer) => {
+      if (!lastPokemon.isIntersecting) {
+        return
+      }
+
+      observer.unobserve(lastPokemon.target)
+      const pokemons = await getPokemons(
+        'https://pokeapi.co/api/v2/pokemon?limit=15&offset=15'
+      )
+      renderPokemons(pokemons)
+    }
+  )
+  observeLastPokemons(pokemonsObserver)
+}
+
 const handlePageLoaded = async () => {
-  const pokemons = await getPokemons()
+  const pokemons = await getPokemons(
+    'https://pokeapi.co/api/v2/pokemon?limit=15&offset=0'
+  )
   renderPokemons(pokemons)
   handleNextPokemonRender()
 }
