@@ -47,14 +47,13 @@ const getPokemonsIds = (pokeApiResults) =>
     const urlAsArray = DOMPurify.sanitize(url.split('/'))
     return urlAsArray.at(urlAsArray.length - 2)
   })
-/*
-Parei aqui na getPokemonsImg inserindo a lib DOMPurify para evitar os ataque 
-xss de manipulação do DOM
-*/
+
 const getPokemonsImgs = async (ids) => {
   const fulfilled = await getOnlyFulfilled({
     arr: ids,
-    func: (id) => fetch(`./assets/img/${id}.png`),
+    func: (id) => fetch(`./assets/img/${id}.png`), //Aqui não precisa utilizar o DOMPurify pois ele
+    //não está acessando uma aplicação externa e sim um diretorio interno com as imagens. Aqui nos
+    //temos controle dos arquivos e pastas retornadas
   })
   return fulfilled.map((response) => response.value.url)
 }
@@ -99,6 +98,12 @@ const renderPokemons = (pokemons) => {
     img.setAttribute('alt', name)
     li.setAttribute('class', `card ${firstType}`)
     li.style.setProperty('--type-color', getTypeColor(firstType))
+
+    nameContainer.textContent = `${id}. ${name[0].toUpperCase()}${name.slice(
+      1
+    )}`
+    typeContainer.textContent = types.length > 1 ? types.join('|') : firstType
+    li.append(img, nameContainer, typeContainer)
 
     console.log(li)
   })
