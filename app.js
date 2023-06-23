@@ -56,8 +56,16 @@ const getPokemonsImgs = async (ids) => {
   return fulfilled.map((response) => response.value.url)
 }
 
-const limit = 15
-let offset = 0
+const paginationInfo = (() => {
+  const limit = 15
+  let offset = 0
+
+  const getLimit = () => limit
+  const getOffset = () => offset
+  const incrementOffset = () => (offset += limit)
+
+  return { getLimit }
+})()
 
 const getPokemons = async () => {
   try {
@@ -81,20 +89,6 @@ const getPokemons = async () => {
         imgUrl: imgs[i],
       }
     })
-
-    offset += limit
-
-    /*
-    1° 
-    limit: 15
-    offset:0
-    offset = 0 + 15
-    2°
-    limit: 15
-    offset: 15 + 15 = 30
-
-    E essa logica se repetira a cada vez qeu a getPokemons for invokada
-    */
 
     return pokemons
   } catch (error) {
