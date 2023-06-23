@@ -21,9 +21,6 @@ const getTypeColor = (type) => {
   )
 }
 
-/*O que eu quero fazer quando essa pagina for carregada?
-Eu quero buscar os pogemos e renderizar os pokemons na tela
-*/
 const getOnlyFulfilled = async ({ func, arr }) => {
   const promises = arr.map(func)
   const responses = await Promise.allSettled(promises)
@@ -100,7 +97,6 @@ const getPokemons = async () => {
 const renderPokemons = (pokemons) => {
   const ul = document.querySelector('[data-js="pokemons-list"]')
   const fragment = document.createDocumentFragment()
-  console.log(fragment)
   pokemons.forEach(({ id, name, types, imgUrl }) => {
     const li = document.createElement('li')
     const img = document.createElement('img')
