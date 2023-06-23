@@ -38,16 +38,19 @@ const getPokemonsType = async (pokeApiResults) => {
   const pokePromises = fulfilled.map((url) => url.value.json())
   const pokemons = await Promise.all(pokePromises)
   return pokemons.map((fulfilled) =>
-    fulfilled.types.map((info) => info.type.name)
+    fulfilled.types.map((info) => DOMPurify.sanitize(info.type.name))
   )
 }
 
 const getPokemonsIds = (pokeApiResults) =>
   pokeApiResults.map(({ url }) => {
-    const urlAsArray = url.split('/')
+    const urlAsArray = DOMPurify.sanitize(url.split('/'))
     return urlAsArray.at(urlAsArray.length - 2)
   })
-
+/*
+Parei aqui na getPokemonsImg inserindo a lib DOMPurify para evitar os ataque 
+xss de manipulação do DOM
+*/
 const getPokemonsImgs = async (ids) => {
   const fulfilled = await getOnlyFulfilled({
     arr: ids,
@@ -56,25 +59,54 @@ const getPokemonsImgs = async (ids) => {
   return fulfilled.map((response) => response.value.url)
 }
 
-const handlePageLoaded = async () => {
+const getPokemons = async () => {
   try {
     const response = await fetch(
       'https://pokeapi.co/api/v2/pokemon?limit=15&offset=0'
     )
 
     if (!response.ok) {
-      throw Error('Não foi possível obter as informações')
+      throw new Error('Não foi possível obter as informações')
     }
 
     const { results: pokeApiResults } = await response.json()
     const types = await getPokemonsType(pokeApiResults)
     const ids = getPokemonsIds(pokeApiResults)
     const imgs = await getPokemonsImgs(ids)
+    const pokemons = ids.map((id, i) => ({
+      id,
+      name: pokeApiResults[i].name,
+      types: types[i],
+      imgUrl: imgs[i],
+    }))
 
-    console.log(imgs)
+    return pokemons
   } catch (error) {
     console.log('algo deu errado', error)
   }
+}
+
+const renderPokemons = (pokemons) => {
+  const ul = document.querySelector('[data-js="pokemons-list"]')
+  pokemons.forEach(({ id, name, types, imgUrl }) => {
+    const li = document.createElement('li')
+    const img = document.createElement('img')
+    const nameContainer = document.createElement('h2')
+    const typeContainer = document.createElement('p')
+    const [firstType] = types
+
+    img.setAttribute('src', imgUrl)
+    img.setAttribute('alt', name)
+    li.setAttribute('class', `card ${firstType}`)
+    li.style.setProperty('--type-color', getTypeColor(firstType))
+
+    console.log(li)
+  })
+}
+
+const handlePageLoaded = async () => {
+  const pokemons = await getPokemons()
+  renderPokemons(pokemons)
 }
 
 handlePageLoaded()
