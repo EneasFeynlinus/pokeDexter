@@ -44,16 +44,14 @@ const getPokemonsType = async (pokeApiResults) => {
 
 const getPokemonsIds = (pokeApiResults) =>
   pokeApiResults.map(({ url }) => {
-    const urlAsArray = DOMPurify.sanitize(url.split('/'))
+    const urlAsArray = DOMPurify.sanitize(url).split('/')
     return urlAsArray.at(urlAsArray.length - 2)
   })
 
 const getPokemonsImgs = async (ids) => {
   const fulfilled = await getOnlyFulfilled({
     arr: ids,
-    func: (id) => fetch(`./assets/img/${id}.png`), //Aqui não precisa utilizar o DOMPurify pois ele
-    //não está acessando uma aplicação externa e sim um diretorio interno com as imagens. Aqui nos
-    //temos controle dos arquivos e pastas retornadas
+    func: (id) => fetch(`./assets/img/${id}.png`),
   })
   return fulfilled.map((response) => response.value.url)
 }
@@ -72,12 +70,20 @@ const getPokemons = async () => {
     const types = await getPokemonsType(pokeApiResults)
     const ids = getPokemonsIds(pokeApiResults)
     const imgs = await getPokemonsImgs(ids)
-    const pokemons = ids.map((id, i) => ({
-      id,
-      name: pokeApiResults[i].name,
-      types: types[i],
-      imgUrl: imgs[i],
-    }))
+    const pokemons = ids.map((id, i) => {
+      console.log({
+        id,
+        name: pokeApiResults[i].name,
+        types: types[i],
+        imgUrl: imgs[id],
+      })
+      return {
+        id,
+        name: pokeApiResults[i].name,
+        types: types[i],
+        imgUrl: imgs[i],
+      }
+    })
 
     return pokemons
   } catch (error) {
@@ -87,6 +93,8 @@ const getPokemons = async () => {
 
 const renderPokemons = (pokemons) => {
   const ul = document.querySelector('[data-js="pokemons-list"]')
+  const fragment = document.createDocumentFragment()
+  console.log(fragment)
   pokemons.forEach(({ id, name, types, imgUrl }) => {
     const li = document.createElement('li')
     const img = document.createElement('img')
@@ -96,22 +104,40 @@ const renderPokemons = (pokemons) => {
 
     img.setAttribute('src', imgUrl)
     img.setAttribute('alt', name)
+    img.setAttribute('class', 'card-image')
     li.setAttribute('class', `card ${firstType}`)
     li.style.setProperty('--type-color', getTypeColor(firstType))
 
     nameContainer.textContent = `${id}. ${name[0].toUpperCase()}${name.slice(
       1
     )}`
-    typeContainer.textContent = types.length > 1 ? types.join('|') : firstType
+    typeContainer.textContent = types.length > 1 ? types.join(' | ') : firstType
     li.append(img, nameContainer, typeContainer)
 
-    console.log(li)
+    fragment.append(li)
   })
+  ul.append(fragment)
+}
+
+const handleNextPokemonRender = () => {
+  const pokemonsObserver = new IntersectionObserver(([lastPokemon]) => {
+    if (!lastPokemon.isIntersecting) {
+      return
+    }
+
+    console.log('Executa uma ação quando o elemento esta visiviel.')
+  })
+
+  const lastPokemon = document.querySelector(
+    '[data-js="pokemons-list"]'
+  ).lastChild
+  pokemonsObserver.observe(lastPokemon)
 }
 
 const handlePageLoaded = async () => {
   const pokemons = await getPokemons()
   renderPokemons(pokemons)
+  handleNextPokemonRender()
 }
 
 handlePageLoaded()
