@@ -43,6 +43,15 @@ const getPokemonsIds = (pokeApiResults) =>
     return urlAsArray.at(urlAsArray.length - 2)
   })
 
+const getPokemonsImgs = async (ids) => {
+  const promises = ids.map((id) => fetch(`./assets/img/${id}.png`))
+  const responses = await Promise.allSettled(promises)
+  const fulfilled = responses.filter(
+    (response) => response.status === 'fulfilled'
+  )
+  return fulfilled.map((response) => response.value.url)
+}
+
 const handlePageLoaded = async () => {
   try {
     const response = await fetch(
@@ -56,7 +65,9 @@ const handlePageLoaded = async () => {
     const { results: pokeApiResults } = await response.json()
     const types = await getPokemonsType(pokeApiResults)
     const ids = getPokemonsIds(pokeApiResults)
-    console.log(ids)
+    const imgs = await getPokemonsImgs(ids)
+
+    console.log(imgs)
   } catch (error) {
     console.log('algo deu errado', error)
   }
