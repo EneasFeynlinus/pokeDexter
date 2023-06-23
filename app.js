@@ -56,9 +56,14 @@ const getPokemonsImgs = async (ids) => {
   return fulfilled.map((response) => response.value.url)
 }
 
-const getPokemons = async (url) => {
+const limit = 15
+let offset = 0
+
+const getPokemons = async () => {
   try {
-    const response = await fetch(url)
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
+    )
 
     if (!response.ok) {
       throw new Error('Não foi possível obter as informações')
@@ -69,12 +74,6 @@ const getPokemons = async (url) => {
     const ids = getPokemonsIds(pokeApiResults)
     const imgs = await getPokemonsImgs(ids)
     const pokemons = ids.map((id, i) => {
-      console.log({
-        id,
-        name: pokeApiResults[i].name,
-        types: types[i],
-        imgUrl: imgs[id],
-      })
       return {
         id,
         name: pokeApiResults[i].name,
@@ -82,6 +81,20 @@ const getPokemons = async (url) => {
         imgUrl: imgs[i],
       }
     })
+
+    offset += limit
+
+    /*
+    1° 
+    limit: 15
+    offset:0
+    offset = 0 + 15
+    2°
+    limit: 15
+    offset: 15 + 15 = 30
+
+    E essa logica se repetira a cada vez qeu a getPokemons for invokada
+    */
 
     return pokemons
   } catch (error) {
@@ -132,19 +145,21 @@ const handleNextPokemonRender = () => {
       }
 
       observer.unobserve(lastPokemon.target)
-      const pokemons = await getPokemons(
-        'https://pokeapi.co/api/v2/pokemon?limit=15&offset=15'
-      )
+
+      if (offset === 150) {
+        return
+      }
+
+      const pokemons = await getPokemons()
       renderPokemons(pokemons)
+      observeLastPokemons(pokemonsObserver)
     }
   )
   observeLastPokemons(pokemonsObserver)
 }
 
 const handlePageLoaded = async () => {
-  const pokemons = await getPokemons(
-    'https://pokeapi.co/api/v2/pokemon?limit=15&offset=0'
-  )
+  const pokemons = await getPokemons()
   renderPokemons(pokemons)
   handleNextPokemonRender()
 }
