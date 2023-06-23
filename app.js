@@ -64,13 +64,14 @@ const paginationInfo = (() => {
   const getOffset = () => offset
   const incrementOffset = () => (offset += limit)
 
-  return { getLimit }
+  return { getLimit, getOffset, incrementOffset }
 })()
 
 const getPokemons = async () => {
   try {
+    const { getLimit, getOffset, incrementOffset } = paginationInfo
     const response = await fetch(
-      `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
+      `https://pokeapi.co/api/v2/pokemon?limit=${getLimit()}&offset=${getOffset()}`
     )
 
     if (!response.ok) {
@@ -89,7 +90,7 @@ const getPokemons = async () => {
         imgUrl: imgs[i],
       }
     })
-
+    incrementOffset()
     return pokemons
   } catch (error) {
     console.log('algo deu errado', error)
@@ -140,7 +141,7 @@ const handleNextPokemonRender = () => {
 
       observer.unobserve(lastPokemon.target)
 
-      if (offset === 150) {
+      if (paginationInfo.getOffset() === 150) {
         return
       }
 
