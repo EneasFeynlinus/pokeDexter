@@ -24,12 +24,17 @@ const getTypeColor = (type) => {
 /*O que eu quero fazer quando essa pagina for carregada?
 Eu quero buscar os pogemos e renderizar os pokemons na tela
 */
+const getOnlyFulfilled = async ({ func, arr }) => {
+  const promises = arr.map(func)
+  const responses = await Promise.allSettled(promises)
+  return responses.filter((response) => response.status === 'fulfilled')
+}
+
 const getPokemonsType = async (pokeApiResults) => {
-  const promisses = pokeApiResults.map((result) => fetch(result.url))
-  const responses = await Promise.allSettled(promisses)
-  const fulfilled = responses.filter(
-    (response) => response.status === 'fulfilled'
-  )
+  const fulfilled = await getOnlyFulfilled({
+    arr: pokeApiResults,
+    func: (result) => fetch(result.url),
+  })
   const pokePromises = fulfilled.map((url) => url.value.json())
   const pokemons = await Promise.all(pokePromises)
   return pokemons.map((fulfilled) =>
@@ -44,11 +49,10 @@ const getPokemonsIds = (pokeApiResults) =>
   })
 
 const getPokemonsImgs = async (ids) => {
-  const promises = ids.map((id) => fetch(`./assets/img/${id}.png`))
-  const responses = await Promise.allSettled(promises)
-  const fulfilled = responses.filter(
-    (response) => response.status === 'fulfilled'
-  )
+  const fulfilled = await getOnlyFulfilled({
+    arr: ids,
+    func: (id) => fetch(`./assets/img/${id}.png`),
+  })
   return fulfilled.map((response) => response.value.url)
 }
 
